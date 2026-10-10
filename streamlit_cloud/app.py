@@ -15,12 +15,18 @@ from pathlib import Path
 import streamlit as st
 
 os.environ["GLASSHOUSE_DEPLOYED"] = "1"        # a hosted copy: never "running locally", so never auto-admin
+REQUIRED = ("HF_TOKEN", "BUNDLE_REPO", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI", "APP_URL")
 try:                                           # root-level secrets → environment (the app reads os.environ)
     for key, value in st.secrets.items():
         if isinstance(value, (str, int, float, bool)):
             os.environ.setdefault(key, str(value))
 except Exception:
     pass
+missing = [k for k in REQUIRED if not os.environ.get(k)]
+if missing:                                    # names only — never values
+    st.error("The site isn't configured yet. Missing secrets: " + ", ".join(missing) + ". Add them under Manage "
+             "app → Settings → Secrets (top level, no [section] header), save, then Reboot the app.")
+    st.stop()
 
 SITE = Path(os.environ.get("GLASSHOUSE_SITE_DIR", "/tmp/glasshouse_site"))
 
